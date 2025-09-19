@@ -36,7 +36,7 @@ It exposes two endpoints:
 ### 1. Clone the Repository
 ```bash
 git clone git@github.com:AmosMaru/nexuscale_blogs.git
-cd articles-api
+cd nexuscale_blogs
 ````
 
 ### 2. Create a Virtual Environment
