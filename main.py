@@ -1,5 +1,6 @@
 from articles import ArticlesService
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict, Any
 import uvicorn
 
@@ -8,6 +9,13 @@ articles_service = ArticlesService()
 
 app = FastAPI(title="Nexuscale Articles API")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", 'https://nexuscale.ai'],  # or ["*"] for all
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/articles", response_model=List[Dict[str, Any]])
 def get_articles():
