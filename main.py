@@ -15,7 +15,8 @@ app.add_middleware(
         "http://localhost:5173", 
         'https://nexuscale.ai',
         "https://www.nexuscale.ai",
-        "https://articles.nexuscale.ai"
+        "https://articles.nexuscale.ai",
+        "https://blogs.nexuscale.ai"
     ],
     allow_credentials=True,
     allow_methods=["*"],
