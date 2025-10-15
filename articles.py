@@ -15,7 +15,7 @@ class ArticlesService:
         # Configs
         self.API_TOKEN = API_TOKEN
         self.API_URL = BLOGS_API_URL
-        self.CACHE_TTL = 60 * 30  # 10 minutes
+        self.CACHE_TTL = 60 * 10  # 10 minutes
 
         # Redis connection
         self.redis_client = redis.StrictRedis(
