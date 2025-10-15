@@ -11,7 +11,7 @@ app = FastAPI(title="Nexuscale Articles API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", 'https://nexuscale.ai', "https://www.nexuscale.ai"],  # or ["*"] for all
+    allow_origins=["http://localhost:5173", 'https://nexuscale.ai', "https://www.nexuscale.ai","https://articles.nexuscale.ai" ],  # or ["*"] for all
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
