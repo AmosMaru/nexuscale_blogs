@@ -36,7 +36,7 @@ class ArticlesService:
         
         try:
             response = requests.get(
-                f"{self.API_URL}/api/articles?populate=*&sort[0]=publishedAt:desc",
+                f"{self.API_URL}/api/articles?populate=*&sort[0]=publishedAt:desc&pagination[limit]=9999",
                 headers={"Authorization": f"Bearer {self.API_TOKEN}"}
             )
             response.raise_for_status()
