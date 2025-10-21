@@ -1,5 +1,7 @@
 import redis
 import requests
+from requests.adapters import HTTPAdapter
+from requests import Session
 import json
 import os
 from typing import List, Dict, Any
@@ -20,21 +22,31 @@ class ArticlesService:
         self.PAGE_SIZE = 15  # Articles per page
         self.MAX_WORKERS = 5  # Concurrent requests
 
-        # Redis connection
+        # Redis connection - configurable for production
         self.redis_client = redis.StrictRedis(
-        host="127.0.0.1",
-        port=6379,
-        db=0,
-        decode_responses=True
+            host=os.getenv("REDIS_HOST", "127.0.0.1"),
+            port=int(os.getenv("REDIS_PORT", "6379")),
+            db=int(os.getenv("REDIS_DB", "0")),
+            decode_responses=True
         )
+
+        # HTTP Session with connection pooling for better performance
+        self.session = Session()
+        adapter = HTTPAdapter(
+            pool_connections=int(os.getenv("HTTP_POOL_CONNECTIONS", "10")),
+            pool_maxsize=int(os.getenv("HTTP_POOL_MAXSIZE", "20")),
+            max_retries=3
+        )
+        self.session.mount('https://', adapter)
+        self.session.mount('http://', adapter)
 
     def _fetch_page(self, page: int) -> Dict[str, Any]:
         """Fetch a single page of articles"""
         try:
-            response = requests.get(
+            response = self.session.get(
                 f"{self.API_URL}/api/articles?populate=*&sort[0]=publishedAt:desc&pagination[page]={page}&pagination[pageSize]={self.PAGE_SIZE}",
                 headers={"Authorization": f"Bearer {self.API_TOKEN}"},
-                timeout=10
+                timeout=30
             )
             response.raise_for_status()
             return response.json()
@@ -92,10 +104,10 @@ class ArticlesService:
             return json.loads(cached)
 
         try:
-            response = requests.get(
+            response = self.session.get(
                 f"{self.API_URL}/api/articles?populate=*&sort[0]=publishedAt:desc&pagination[page]={page}&pagination[pageSize]={page_size}",
                 headers={"Authorization": f"Bearer {self.API_TOKEN}"},
-                timeout=10
+                timeout=30
             )
             response.raise_for_status()
             result = response.json()
@@ -109,22 +121,23 @@ class ArticlesService:
     def get_article_by_id(self, article_id: str) -> Dict[str, Any]:
         """Fetch single article by ID with caching"""
         cache_key = f"article:{article_id}"
-        
+
         # Check cache first
         cached = self.redis_client.get(cache_key)
         if cached:
             return json.loads(cached)
-        
+
         try:
-            response = requests.get(
+            response = self.session.get(
                 f"{self.API_URL}/api/articles/{article_id}?populate=*",
-                headers={"Authorization": f"Bearer {self.API_TOKEN}"}
+                headers={"Authorization": f"Bearer {self.API_TOKEN}"},
+                timeout=30
             )
             response.raise_for_status()
             data = response.json()["data"]
-            
+
             # Cache the result
-            # self.redis_client.setex(cache_key, self.CACHE_TTL, json.dumps(data))
+            self.redis_client.setex(cache_key, self.CACHE_TTL, json.dumps(data))
             return data
         except requests.RequestException as e:
             raise HTTPException(status_code=500, detail=f"Failed to fetch article {article_id}: {str(e)}")
