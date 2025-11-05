@@ -16,7 +16,8 @@ app.add_middleware(
         'https://nexuscale.ai',
         "https://www.nexuscale.ai",
         "https://articles.nexuscale.ai",
-        "https://blogs.nexuscale.ai"
+        "https://blogs.nexuscale.ai",
+        "https://new-nexuscale-frontend.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
