@@ -51,6 +51,15 @@ def get_articles(
         raise e
 
 
+@app.get("/articles/slug/{slug}", response_model=Dict[str, Any])
+def get_article_by_slug(slug: str):
+    """Get article by slug"""
+    try:
+        return articles_service.get_article_by_slug(slug)
+    except HTTPException as e:
+        raise e
+
+
 @app.get("/articles/{article_id}", response_model=Dict[str, Any])
 def get_article(article_id: str):
     """Get article by ID"""

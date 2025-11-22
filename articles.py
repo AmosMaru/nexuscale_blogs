@@ -142,3 +142,40 @@ class ArticlesService:
         except requests.RequestException as e:
             raise HTTPException(status_code=500, detail=f"Failed to fetch article {article_id}: {str(e)}")
 
+    def get_article_by_slug(self, slug: str) -> Dict[str, Any]:
+        """Fetch single article by slug with caching"""
+        cache_key = f"article:slug:{slug}"
+
+        # Check cache first
+        cached = self.redis_client.get(cache_key)
+        if cached:
+            return json.loads(cached)
+
+        try:
+            # Use Strapi's filter syntax to query by slug
+            params = {
+                "filters[slug][$eq]": slug,
+                "populate": "*"
+            }
+
+            response = self.session.get(
+                f"{self.API_URL}/api/articles",
+                params=params,
+                headers={"Authorization": f"Bearer {self.API_TOKEN}"},
+                timeout=30
+            )
+            response.raise_for_status()
+            result = response.json()
+
+            # Strapi returns an array of results, get the first one
+            if result.get("data") and len(result["data"]) > 0:
+                data = result["data"][0]
+                # Cache the result
+                self.redis_client.setex(cache_key, self.CACHE_TTL, json.dumps(data))
+                return data
+            else:
+                raise HTTPException(status_code=404, detail=f"Article with slug '{slug}' not found")
+
+        except requests.RequestException as e:
+            raise HTTPException(status_code=500, detail=f"Failed to fetch article by slug '{slug}': {str(e)}")
+
